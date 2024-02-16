@@ -2,6 +2,9 @@ from bs4 import BeautifulSoup
 import requests
 import json
 
+user_courses = []  # User courses stored as objects
+
+
 class Course:
     def __init__(self, teacher, course_name, course_code, class_enrolled, class_status, class_time):
         self.teacher = teacher
@@ -11,7 +14,7 @@ class Course:
         self.status = class_status
         self.time = class_time
 
-def extract_data(course_term = "2024-03", course_code = "62150"):  #Extracts course data from ZotCourse
+def extract_data(course_term = "2024-03", course_code = "62150"):  # Extracts course data from ZotCourse and defaults term to 2024 Winter Quarter
     url = ("https://zotcourse.appspot.com/search?"
            f"YearTerm={course_term}"
            "&Breadth=ANY"
@@ -43,7 +46,7 @@ def extract_data(course_term = "2024-03", course_code = "62150"):  #Extracts cou
     class_enrolled = f"{sections_dict['enrll']}/{sections_dict['m_enrll']}"
     class_status = sections_dict["stat"]
     class_time = meeting_dict["f_time"]
-    print(teacher, course_name, course_code, class_enrolled, class_status, class_time)
+    return teacher, course_name, course_code, class_enrolled, class_status, class_time
 
 
 def add_course():
@@ -56,8 +59,36 @@ def delete_course():
     print("Deleted Course:", course_code)
 
 
-def view_course(user_courses):
-    for course in user_courses:
-        print(course)
+def view_course():
+    if len(user_courses) != 0:
+        for course in user_courses:
+            print(course)
+    else:
+        print("You don't have any courses added right now.")
 
-extract_data()
+
+def load_classes():
+    course_codes = []  # Course Codes stored as course numbers
+    with open("course_codes.txt", "r") as file:
+        for line in file.readlines():
+            try:
+                course_codes.append(int(line))
+            except ValueError:
+                continue
+    print(course_codes)
+    if len(course_codes) != 0:
+        for code in course_codes:
+            print(code)
+            course = Course(extract_data(code))
+            user_courses.append(course)
+
+load_classes()
+for course in user_courses:
+    print("------------------------------")
+    print(course.teacher)
+    print(course.name)
+    print(course.code)
+    print(course.enrolled)
+    print(course.status)
+    print(course.time)
+    print("------------------------------")

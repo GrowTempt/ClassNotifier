@@ -3,7 +3,6 @@
 import user_interface
 import functionality
 
-user_courses = ["Test", "Run"]
 
 def commands(user_input):
     if user_input == "1":  # Add Course
@@ -11,11 +10,12 @@ def commands(user_input):
     elif user_input == "2":  # Delete Course
         functionality.delete_course()
     elif user_input == "3":  # View Coures
-        functionality.view_course(user_courses)
+        functionality.view_course()
     elif user_input == "Q":
         exit()
     else:
         print("Not a valid option. Please try again.")
+
 
 def main():
     user_input = input()
