@@ -1,4 +1,5 @@
 # UCI Class Notifier
+# Programmed by Vincent Hoang
 
 from user_interface import main_menu
 import functionality
