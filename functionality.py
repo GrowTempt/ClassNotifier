@@ -1,9 +1,9 @@
 from bs4 import BeautifulSoup
 import requests
-from user_interface import ui_course_view
+from user_interface import ui_course_view, ui_add_course
 
 user_courses = []  # User courses stored as objects
-
+file_name = "course_codes.txt"
 
 class Course:
     def __init__(self, teacher, course_name, course_code, course_enrolled, course_status, course_time):
@@ -79,13 +79,35 @@ def extract_data(course_code: str, course_term = "2024-03"): # Extracts course d
 
 
 def add_course():
-    course_code = input("Add Course Code: ")
-    print("Added Course:", course_code)
+    course_code_input = input("Add Course Code: ")
+    with open(file_name, "a") as file:
+        file.write(f"{course_code_input}\n")
+    course_data = extract_data(course_code_input)
+    teacher = course_data[0]
+    course_name = course_data[1]
+    course_code = course_data[2]
+    course_enrolled = course_data[3]
+    course_status = course_data[4]
+    course_time = course_data[5]
+    course = Course(teacher, course_name, course_code, course_enrolled, course_status, course_time) 
+    user_courses.append(course)
+    ui_add_course(teacher, course_name, course_code, course_enrolled, course_status, course_time)
+    print("Added Course:", course_code_input)
 
 
 def delete_course():
-    course_code = input("Delete Course Code: ")
-    print("Deleted Course:", course_code)
+    course_code_input = input("Delete Course Code: ")
+    for course in user_courses:
+        if course.code == course_code_input:
+            user_courses.remove(course)
+    with open(file_name, "r") as file:
+        lines = file.readlines()
+    with open(file_name, "w") as file:
+        for line in lines:
+            if line.strip("\n") != course_code_input:
+                file.write(line)
+
+    print("Deleted Course:", course_code_input)
 
 
 def view_course():
@@ -98,7 +120,7 @@ def view_course():
 def load_classes():
     print("Loading Data . . .")
     course_codes = []  # Course Codes stored as course numbers
-    with open("course_codes.txt", "r") as file:
+    with open(file_name, "r") as file:
         for line in file.readlines():
             try:
                 course_codes.append(int(line))

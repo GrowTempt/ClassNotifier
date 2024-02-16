@@ -16,3 +16,13 @@ def ui_course_view(user_courses):
         print(course.status)
         print(course.time)
         print("------------------------------")
+
+def ui_add_course(teacher, course_name, course_code, course_enrolled, course_status, course_time):
+    print("------------------------------")
+    print(teacher)
+    print(course_name)
+    print(course_code)
+    print(course_enrolled)
+    print(course_status)
+    print(course_time)
+    print("------------------------------")
