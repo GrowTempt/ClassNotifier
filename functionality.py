@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
-from user_interface import ui_course_view, ui_add_course
+from user_interface import ui_course_view, ui_add_course, ui_waiting_mode
+from main import main
+import time
 
 user_courses = []  # User courses stored as objects
 file_name = "course_codes.txt"
@@ -73,7 +75,7 @@ def extract_data(course_code: str, course_term = "2024-03"): # Extracts course d
         elif "f_time: " in clean_line:
             course_time = clean_line[clean_line.find("f_time: ") + len("f_time: "):]
     course_name = f"{c_type} {dept} {num}"
-    course_enrolled = f"{enrll}/{m_enrll}"
+    course_enrolled = f"{enrll} / {m_enrll}"
     course_data = [teacher, course_name, course_code, course_enrolled, course_status, course_time]
     return course_data
 
@@ -116,6 +118,14 @@ def view_course():
     else:
         print("You don't have any courses added right now.")
 
+
+def waiting_mode():
+    ui_waiting_mode()
+    while True:
+        for course in user_courses:
+            if course.status == "OPEN":
+                print(f"!!!\t{course.name} IS OPEN ({course.enrolled})\t!!! ")
+        time.sleep(60)  # Checks user courses every minute
 
 def load_classes():
     print("Loading Data . . .")
