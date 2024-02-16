@@ -127,6 +127,7 @@ def waiting_mode():
                 print(f"!!!\t{course.name} IS OPEN ({course.enrolled})\t!!! ")
         time.sleep(60)  # Checks user courses every minute
 
+
 def load_classes():
     print("Loading Data . . .")
     course_codes = []  # Course Codes stored as course numbers
