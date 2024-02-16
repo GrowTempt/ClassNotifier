@@ -23,7 +23,6 @@ def commands(user_input):
 
 
 def main():
-    functionality.load_classes()
     global waiting_mode
     waiting_mode = False
 
@@ -35,4 +34,5 @@ def main():
         commands(user_input)
 
 if __name__ == "__main__":
+    functionality.load_classes()
     main()

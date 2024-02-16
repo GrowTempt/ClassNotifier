@@ -76,40 +76,63 @@ def extract_data(course_code: str, course_term = "2024-03"): # Extracts course d
             course_time = clean_line[clean_line.find("f_time: ") + len("f_time: "):]
     course_name = f"{c_type} {dept} {num}"
     course_enrolled = f"{enrll} / {m_enrll}"
-    course_data = [teacher, course_name, course_code, course_enrolled, course_status, course_time]
+    course_data = [teacher, course_name, course_code, course_enrolled, course_status, course_time, data] #data at end used for validity code checker
     return course_data
 
+def valid_course_code_checker(code):
+    course_data = extract_data(code)
+    raw_data = course_data[6]
+    if raw_data == '{"data": []}':
+        print("Invalid")
+        return False  # Invalid Code
+    else:
+        print("Valid")
+        return True  # Valid Code
+    
 
 def add_course():
     course_code_input = input("Add Course Code: ")
-    with open(file_name, "a") as file:
-        file.write(f"{course_code_input}\n")
-    course_data = extract_data(course_code_input)
-    teacher = course_data[0]
-    course_name = course_data[1]
-    course_code = course_data[2]
-    course_enrolled = course_data[3]
-    course_status = course_data[4]
-    course_time = course_data[5]
-    course = Course(teacher, course_name, course_code, course_enrolled, course_status, course_time) 
-    user_courses.append(course)
-    ui_add_course(teacher, course_name, course_code, course_enrolled, course_status, course_time)
-    print("Added Course:", course_code_input)
+    if len(course_code_input) == 5 and valid_course_code_checker(course_code_input) is True:
+        with open(file_name, "a") as file:
+            file.write(f"{course_code_input}\n")
+        course_data = extract_data(course_code_input)
+        teacher = course_data[0]
+        course_name = course_data[1]
+        course_code = course_data[2]
+        course_enrolled = course_data[3]
+        course_status = course_data[4]
+        course_time = course_data[5]
+        course = Course(teacher, course_name, course_code, course_enrolled, course_status, course_time) 
+        user_courses.append(course)
+        ui_add_course(teacher, course_name, course_code, course_enrolled, course_status, course_time)
+        print("Added Course:", course_code_input)
+    else:
+        print("Failed to add course.")
+        main()
 
 
 def delete_course():
     course_code_input = input("Delete Course Code: ")
-    for course in user_courses:
-        if course.code == course_code_input:
-            user_courses.remove(course)
-    with open(file_name, "r") as file:
-        lines = file.readlines()
-    with open(file_name, "w") as file:
-        for line in lines:
-            if line.strip("\n") != course_code_input:
-                file.write(line)
-
-    print("Deleted Course:", course_code_input)
+    if len(course_code_input) == 5:
+        delete = False
+        for course in user_courses:
+            if course.code == course_code_input:
+                user_courses.remove(course)
+                delete = True
+        if delete is True:
+            with open(file_name, "r") as file:
+                lines = file.readlines()
+            with open(file_name, "w") as file:
+                for line in lines:
+                    if line.strip("\n") != course_code_input:
+                        file.write(line)
+            print("Deleted Course:", course_code_input)
+        else:
+            print("Failed to delete course.")
+            main()
+    else:
+        print("Failed to delete course.")
+        main()
 
 
 def view_course():
