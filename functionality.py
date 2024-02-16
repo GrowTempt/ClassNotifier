@@ -5,15 +5,15 @@ user_courses = []  # User courses stored as objects
 
 
 class Course:
-    def __init__(self, teacher, course_name, course_code, class_enrolled, class_status, class_time):
+    def __init__(self, teacher, course_name, course_code, course_enrolled, course_status, course_time):
         self.teacher = teacher
         self.name = course_name
         self.code = course_code
-        self.enrolled = class_enrolled
-        self.status = class_status
-        self.time = class_time
+        self.enrolled = course_enrolled
+        self.status = course_status
+        self.time = course_time
 
-def extract_data(course_code = "62150", course_term = "2024-03"):  # Extracts course data from ZotCourse and defaults term to 2024 Winter Quarter
+def extract_data(course_code: str, course_term = "2024-03"): # Extracts course data from ZotCourse and defaults term to 2024 Winter Quarter
     url = ("https://zotcourse.appspot.com/search?"
            f"YearTerm={course_term}"
            "&Breadth=ANY"
@@ -50,11 +50,11 @@ def extract_data(course_code = "62150", course_term = "2024-03"):  # Extracts co
     num = ""
     enrll = ""
     m_enrll = ""
-    class_status = ""
-    class_time = ""
+    course_status = ""
+    course_time = ""
     for clean_line in clean_data:
-        if "name: " in clean_line:
-            teacher = clean_line[clean_line.find("name: ") + len("name: "):]
+        if "[{name: " in clean_line:
+            teacher = clean_line[clean_line.find("[{name: ") + len("[{name: "):]
         elif "code: " in clean_line:
             course_code = clean_line[clean_line.find("code: ") + len("code: "):]
         elif "dept: " in clean_line:
@@ -68,12 +68,13 @@ def extract_data(course_code = "62150", course_term = "2024-03"):  # Extracts co
         elif "m_enroll: " in clean_line:
             m_enrll = clean_line[clean_line.find("m_enroll: ") + len("m_enroll: "):]
         elif "stat: " in clean_line:
-            class_status = clean_line[clean_line.find("stat: ") + len("stat: "):]
+            course_status = clean_line[clean_line.find("stat: ") + len("stat: "):]
         elif "f_time: " in clean_line:
-            class_time = clean_line[clean_line.find("f_time: ") + len("f_time: "):]
+            course_time = clean_line[clean_line.find("f_time: ") + len("f_time: "):]
     course_name = f"{c_type} {dept} {num}"
-    class_enrolled = f"{enrll}/{m_enrll}"
-    print (teacher, course_name, course_code, class_enrolled, class_status, class_time)
+    course_enrolled = f"{enrll}/{m_enrll}"
+    course_data = [teacher, course_name, course_code, course_enrolled, course_status, course_time]
+    return course_data
 
 
 def add_course():
@@ -93,7 +94,9 @@ def view_course():
     else:
         print("You don't have any courses added right now.")
 
+
 def load_classes():
+    print("Loading Data . . .")
     course_codes = []  # Course Codes stored as course numbers
     with open("course_codes.txt", "r") as file:
         for line in file.readlines():
@@ -101,26 +104,26 @@ def load_classes():
                 course_codes.append(int(line))
             except ValueError:
                 continue
-    print(course_codes)
     if len(course_codes) != 0:
         for code in course_codes:
-            extract_data(code)
-            #course = Course(extract_data(code)) TODO: FIX This 
-            #user_courses.append(course)
-
-            
+            course_data = extract_data(code)
+            teacher = course_data[0]
+            course_name = course_data[1]
+            course_code = course_data[2]
+            course_enrolled = course_data[3]
+            course_status = course_data[4]
+            course_time = course_data[5]
+            course = Course(teacher, course_name, course_code, course_enrolled, course_status, course_time) 
+            user_courses.append(course)
+    for course in user_courses:
+        print("------------------------------")
+        print(course.teacher)
+        print(course.name)
+        print(course.code)
+        print(course.enrolled)
+        print(course.status)
+        print(course.time)
+        print("------------------------------")
+    print("Successfully loaded!")
+   
 load_classes()
-
-"""
-for course in user_courses:
-    print("------------------------------")
-    print(course.teacher)
-    print(course.name)
-    print(course.code)
-    print(course.enrolled)
-    print(course.status)
-    print(course.time)
-    print("------------------------------")
-"""
-
-#extract_data("35580")
