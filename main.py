@@ -1,4 +1,5 @@
 # UCI Class Notifier
+
 import user_interface
 import functionality
 
