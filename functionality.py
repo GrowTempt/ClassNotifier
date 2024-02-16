@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
+from user_interface import ui_course_view
 
 user_courses = []  # User courses stored as objects
 
@@ -78,19 +79,18 @@ def extract_data(course_code: str, course_term = "2024-03"): # Extracts course d
 
 
 def add_course():
-    course_code = input("Type in Course Code: ")
+    course_code = input("Add Course Code: ")
     print("Added Course:", course_code)
 
 
 def delete_course():
-    course_code = input("Type in Course Code: ")
+    course_code = input("Delete Course Code: ")
     print("Deleted Course:", course_code)
 
 
 def view_course():
     if len(user_courses) != 0:
-        for course in user_courses:
-            print(course)
+        ui_course_view(user_courses)
     else:
         print("You don't have any courses added right now.")
 
@@ -115,15 +115,4 @@ def load_classes():
             course_time = course_data[5]
             course = Course(teacher, course_name, course_code, course_enrolled, course_status, course_time) 
             user_courses.append(course)
-    for course in user_courses:
-        print("------------------------------")
-        print(course.teacher)
-        print(course.name)
-        print(course.code)
-        print(course.enrolled)
-        print(course.status)
-        print(course.time)
-        print("------------------------------")
     print("Successfully loaded!")
-   
-load_classes()

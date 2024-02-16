@@ -1,6 +1,6 @@
 # UCI Class Notifier
 
-import user_interface
+from user_interface import main_menu
 import functionality
 
 
@@ -18,9 +18,11 @@ def commands(user_input):
 
 
 def main():
-    user_input = input()
+    functionality.load_classes()
+
+    user_input = ""
     while user_input != "Q":
-        user_interface.main_menu()
+        main_menu()
         user_input = input()
         print()
         commands(user_input)
