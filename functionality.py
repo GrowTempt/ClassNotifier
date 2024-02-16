@@ -83,16 +83,19 @@ def valid_course_code_checker(code):
     course_data = extract_data(code)
     raw_data = course_data[6]
     if raw_data == '{"data": []}':
-        print("Invalid")
         return False  # Invalid Code
     else:
-        print("Valid")
         return True  # Valid Code
     
+def detect_duplicate_code(code):
+    for course in user_courses:
+        if course.code == code:
+            return True  # Detected a duplicate
+    return False
 
 def add_course():
     course_code_input = input("Add Course Code: ")
-    if len(course_code_input) == 5 and valid_course_code_checker(course_code_input) is True:
+    if len(course_code_input) == 5 and valid_course_code_checker(course_code_input) is True and detect_duplicate_code(course_code_input) is False:
         with open(file_name, "a") as file:
             file.write(f"{course_code_input}\n")
         course_data = extract_data(course_code_input)
@@ -107,7 +110,10 @@ def add_course():
         ui_add_course(teacher, course_name, course_code, course_enrolled, course_status, course_time)
         print("Added Course:", course_code_input)
     else:
-        print("Failed to add course.")
+        if detect_duplicate_code(course_code_input) is True:
+            print("Already have the course added!")
+        else:
+            print("Failed to add course.")
         main()
 
 
