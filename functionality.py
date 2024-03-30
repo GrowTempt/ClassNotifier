@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+import json
 import requests
 from user_interface import ui_course_view, ui_add_course, ui_waiting_mode
 from main import main
@@ -16,82 +17,63 @@ class Course:
         self.status = course_status
         self.time = course_time
 
-def extract_data(course_code: str, course_term = "2024-03"): # Extracts course data from ZotCourse and defaults term to 2024 Winter Quarter
-    url = ("https://zotcourse.appspot.com/search?"
-           f"YearTerm={course_term}"
-           "&Breadth=ANY"
-           "&Dept=%20ALL"
-           f"&CourseCodes={course_code}"
-           "&CourseNum="
-           "&CourseTitle="
-           "&InstrName="
-           "&Division=ANY"
-           "&ClassType=ALL"
-           "&Units="
-           "&Days="
-           "&StartTime="
-           "&EndTime="
-           "&FullCourses=ANY")
-    page = requests.get(url)
-    soup = BeautifulSoup(page.text, "html.parser")
-    data = str(soup)
-    # Data is messy, need to clean it up
-    clean_data = []
-    for line in data.split("\","):
-        if "amp;" in line:
-            line = line.replace("amp;", "")
-        if "m_enrll" in line:
-            line = line.replace("m_enrll", "m_enroll")
-        line = line.strip("{[]}").replace("\"", "")
-        clean_data.append(line)
-        #print(line)
-    # After cleanup, declare variables
-    teacher = ""
-    course_code = ""
-    dept = ""
-    c_type = ""
-    num = ""
-    enrll = ""
-    m_enrll = ""
-    course_status = ""
-    course_time = ""
-    for clean_line in clean_data:
-        if "[{name: " in clean_line:
-            teacher = clean_line[clean_line.find("[{name: ") + len("[{name: "):]
-        elif "code: " in clean_line:
-            course_code = clean_line[clean_line.find("code: ") + len("code: "):]
-        elif "dept: " in clean_line:
-            dept = clean_line[clean_line.find("dept: ") + len("dept: "):]
-        elif "c_type: " in clean_line:
-            c_type = clean_line[clean_line.find("c_type: ") + len("c_type: "):]
-        elif "{num: " in clean_line:
-            num = clean_line[clean_line.find("{num: ") + len("{num: "):]
-        elif "enrll: " in clean_line:
-            enrll = clean_line[clean_line.find("enrll: ") + len("enrll: "):]
-        elif "m_enroll: " in clean_line:
-            m_enrll = clean_line[clean_line.find("m_enroll: ") + len("m_enroll: "):]
-        elif "stat: " in clean_line:
-            course_status = clean_line[clean_line.find("stat: ") + len("stat: "):]
-        elif "f_time: " in clean_line:
-            course_time = clean_line[clean_line.find("f_time: ") + len("f_time: "):]
-    course_name = f"{c_type} {dept} {num}"
-    course_enrolled = f"{enrll} / {m_enrll}"
-    course_data = [teacher, course_name, course_code, course_enrolled, course_status, course_time, data] #data at end used for validity code checker
-    return course_data
+def extract_data(course_code: str, course_term = "2024-14"): # Extracts course data from ZotCourse and defaults term to 2024 Spring Quarter
+    try:
+        url = ("https://zotcourse.appspot.com/search?"
+            f"YearTerm={course_term}"
+            "&Breadth=ANY"
+            "&Dept=%20ALL"
+            f"&CourseCodes={course_code}"
+            "&CourseNum="
+            "&CourseTitle="
+            "&InstrName="
+            "&Division=ANY"
+            "&ClassType=ALL"
+            "&Units="
+            "&Days="
+            "&StartTime="
+            "&EndTime="
+            "&FullCourses=ANY")
+        page = requests.get(url)
+        soup = BeautifulSoup(page.text, "html.parser")
+        data = str(soup)
+        data_json = json.loads(data)
+        course = data_json["data"][0]["courses"][0]
+        sections = course["sections"][0]
+        teacher = sections["instr"][0]["name"]
+        c_type = sections["c_type"]
+        s_num = sections["s_num"]
+        dept = data_json["data"][0]["dept"]
+        dept = dept.replace("amp;", "")
+        num = course["num"]
+        course_name = f"{c_type} {s_num} {dept} {num}"
+        enrll = sections["enrll"]
+        m_enrll = sections["m_enrll"]
+        course_enrolled = f"{enrll} / {m_enrll}"
+        course_status = sections["stat"]
+        course_time = sections["mtng"][0]["f_time"]
+        # print(json.dumps(data_json, indent=4), type(data_json))
+        course_data = [teacher, course_name, course_code, course_enrolled, course_status, course_time]
+        return course_data
+    except IndexError:
+        print(f"Invalid Course Code: {course_code}. Please Try Again.")
+        return False # Invalid course code
+
 
 def valid_course_code_checker(code):
     course_data = extract_data(code)
-    raw_data = course_data[6]
-    if raw_data == '{"data": []}':
-        return False  # Invalid Code
+    if course_data is False:
+        return False # Invalid Course Code
     else:
-        return True  # Valid Code
-    
+        return True # Valid Course Code
+
+
 def detect_duplicate_code(code):
     for course in user_courses:
         if course.code == code:
             return True  # Detected a duplicate
     return False
+
 
 def add_course():
     course_code_input = input("Add Course Code: ")
@@ -118,43 +100,50 @@ def add_course():
 
 
 def delete_course():
-    course_code_input = input("Delete Course Code: ")
-    if len(course_code_input) == 5:
-        delete = False
-        for course in user_courses:
-            if course.code == course_code_input:
-                user_courses.remove(course)
-                delete = True
-        if delete is True:
-            with open(file_name, "r") as file:
-                lines = file.readlines()
-            with open(file_name, "w") as file:
-                for line in lines:
-                    if line.strip("\n") != course_code_input:
-                        file.write(line)
-            print("Deleted Course:", course_code_input)
+    course_list = view_course()
+    if course_list is True: # Checks to see if the user first has any courses
+        course_code_input = input("Delete Course Code: ")
+        if len(course_code_input) == 5:
+            delete = False
+            for course in user_courses:
+                if course.code == course_code_input:
+                    user_courses.remove(course)
+                    delete = True
+            if delete is True:
+                with open(file_name, "r") as file:
+                    lines = file.readlines()
+                with open(file_name, "w") as file:
+                    for line in lines:
+                        if line.strip("\n") != course_code_input:
+                            file.write(line)
+                print("Deleted Course:", course_code_input)
+            else:
+                print("Failed to delete course.")
+                main()
         else:
             print("Failed to delete course.")
             main()
-    else:
-        print("Failed to delete course.")
-        main()
 
 
 def view_course():
     if len(user_courses) != 0:
         ui_course_view(user_courses)
+        return True
     else:
         print("You don't have any courses added right now.")
 
 
 def waiting_mode():
-    ui_waiting_mode()
-    while True:
-        for course in user_courses:
-            if course.status == "OPEN":
-                print(f"!!!\t{course.name} IS OPEN ({course.enrolled})\t!!! ")
-        time.sleep(60)  # Checks user courses every minute
+    course_list = view_course()
+    if course_list is True: # Checks to see if the user first has any courses
+        ui_waiting_mode()
+        while True:
+            for course in user_courses:
+                if course.status == "OPEN":
+                    print(f"!!!\t{course.name} IS OPEN ({course.enrolled})\t!!! ")
+            time.sleep(60)  # Checks user courses every minute
+    else:
+        main()
 
 
 def load_classes():
@@ -168,13 +157,17 @@ def load_classes():
                 continue
     if len(course_codes) != 0:
         for code in course_codes:
-            course_data = extract_data(code)
-            teacher = course_data[0]
-            course_name = course_data[1]
-            course_code = course_data[2]
-            course_enrolled = course_data[3]
-            course_status = course_data[4]
-            course_time = course_data[5]
-            course = Course(teacher, course_name, course_code, course_enrolled, course_status, course_time) 
-            user_courses.append(course)
+            try:
+                course_data = extract_data(code)
+                teacher = course_data[0]
+                course_name = course_data[1]
+                course_code = course_data[2]
+                course_enrolled = course_data[3]
+                course_status = course_data[4]
+                course_time = course_data[5]
+                course = Course(teacher, course_name, course_code, course_enrolled, course_status, course_time) 
+                user_courses.append(course)
+            except TypeError:
+                print(f"Invalid Course Code detected: {code}. Please Remove from the txt file.")
+                continue
     print("Successfully loaded!")
