@@ -1,11 +1,12 @@
 from bs4 import BeautifulSoup
 import json
 import requests
-from user_interface import ui_course_view, ui_add_course, ui_waiting_mode
+from user_interface import ui_course_view, ui_add_course, ui_checking_mode
 from main import main
 import time
 
 user_courses = []  # User courses stored as objects
+timer = 600 # Time before it checks classes again in seconds
 file_name = "course_codes.txt"
 
 class Course:
@@ -133,15 +134,18 @@ def view_course():
         print("You don't have any courses added right now.")
 
 
-def waiting_mode():
+def checking_mode():
     course_list = view_course()
     if course_list is True: # Checks to see if the user first has any courses
-        ui_waiting_mode()
+        ui_checking_mode()
+        count_check = 0
         while True:
+            count_check += 1
+            print(f"Checked {count_check}x times for class openings")
             for course in user_courses:
                 if course.status == "OPEN":
                     print(f"!!!\t{course.name} IS OPEN ({course.enrolled})\t!!! ")
-            time.sleep(60)  # Checks user courses every minute
+            time.sleep(timer)  # Checks classes at timer
     else:
         main()
 

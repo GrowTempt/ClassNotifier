@@ -4,19 +4,19 @@
 from user_interface import main_menu
 import functionality
 
-waiting_mode = False
+checking_mode = False
 
 def commands(user_input):
-    global waiting_mode
+    global checking_mode
     if user_input == "1":  # Add Course
         functionality.add_course()
     elif user_input == "2":  # Delete Course
         functionality.delete_course()
     elif user_input == "3":  # View Coures
         functionality.view_course()
-    elif user_input == "4":  # Waiting Mode, mode that sends updates if there's a change
-        waiting_mode = True
-        functionality.waiting_mode()
+    elif user_input == "4":  # Checking Mode, mode that sends updates if there's a change
+        checking_mode = True
+        functionality.checking_mode()
     elif user_input == "Q":
         exit()
     else:
@@ -24,11 +24,11 @@ def commands(user_input):
 
 
 def main():
-    global waiting_mode
-    waiting_mode = False
+    global checking_mode
+    checking_mode = False
 
     user_input = ""
-    while user_input != "Q" and waiting_mode is False:
+    while user_input != "Q" and checking_mode is False:
         main_menu()
         user_input = input()
         print()
